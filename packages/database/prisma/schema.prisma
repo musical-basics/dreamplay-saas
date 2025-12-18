@@ -18,6 +18,7 @@ model Customer {
 
 model ContentTemplate {
   id       String        @id @default(uuid())
+  slug     String        @unique
   name     String
   type     ContentType
   body     String

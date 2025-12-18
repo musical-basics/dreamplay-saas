@@ -9,6 +9,7 @@ interface TemplateEditorProps {
     initialData?: {
         id: string;
         name: string;
+        slug: string;
         type: "EMAIL" | "LANDING" | "CHECKOUT";
         body: string;
     } | null;
@@ -16,6 +17,7 @@ interface TemplateEditorProps {
 
 export function TemplateEditor({ initialData }: TemplateEditorProps) {
     const [name, setName] = useState(initialData?.name || "");
+    const [slug, setSlug] = useState(initialData?.slug || "");
     const [type, setType] = useState<"EMAIL" | "LANDING" | "CHECKOUT">(
         initialData?.type || "EMAIL"
     );
@@ -30,11 +32,12 @@ export function TemplateEditor({ initialData }: TemplateEditorProps) {
             if (isNew) {
                 const formData = new FormData();
                 formData.append("name", name);
+                formData.append("slug", slug);
                 formData.append("type", type);
                 formData.append("body", body);
                 await createTemplate(formData);
             } else {
-                await updateTemplate(initialData.id, body);
+                await updateTemplate(initialData.id, { body, slug, name, type });
             }
         } catch (error) {
             console.error("Failed to save:", error);
@@ -56,9 +59,21 @@ export function TemplateEditor({ initialData }: TemplateEditorProps) {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            disabled={!isNew}
+                            // disabled={!isNew} // Allow editing name
                             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
                             placeholder="e.g. Welcome Email"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold uppercase text-slate-500">
+                            Slug
+                        </label>
+                        <input
+                            type="text"
+                            value={slug}
+                            onChange={(e) => setSlug(e.target.value)}
+                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+                            placeholder="e.g. welcome-email"
                         />
                     </div>
                     <div className="flex flex-col gap-1">
