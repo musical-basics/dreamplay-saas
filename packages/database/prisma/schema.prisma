@@ -1,0 +1,70 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Customer {
+  id                String                 @id @default(uuid())
+  email             String                 @unique
+  name              String?
+  shopifyCustomerId String?
+  createdAt         DateTime               @default(now())
+  journeyStates     CustomerJourneyState[]
+}
+
+model ContentTemplate {
+  id       String        @id @default(uuid())
+  name     String
+  type     ContentType
+  body     String
+  steps    JourneyStep[]
+}
+
+enum ContentType {
+  EMAIL
+  LANDING
+  CHECKOUT
+}
+
+model Journey {
+  id      String        @id @default(uuid())
+  name    String
+  status  JourneyStatus
+  steps   JourneyStep[]
+}
+
+enum JourneyStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+model JourneyStep {
+  id                String   @id @default(uuid())
+  journeyId         String
+  journey           Journey  @relation(fields: [journeyId], references: [id])
+  stepOrder         Int
+  type              StepType
+  contentTemplateId String?
+  contentTemplate   ContentTemplate? @relation(fields: [contentTemplateId], references: [id])
+}
+
+enum StepType {
+  SEND_EMAIL
+  RENDER_PAGE
+  DELAY
+}
+
+model CustomerJourneyState {
+  id           String   @id @default(uuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id])
+  currentStepId String?
+  status       String
+  lastUpdated  DateTime @default(now())
+}
