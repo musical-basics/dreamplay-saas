@@ -1,5 +1,7 @@
 import { db } from "@repo/database";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
     // Simple check to ensure DB connection works (even if no data yet)
     const users = await db.customer.findMany().catch(() => []);
