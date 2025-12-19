@@ -25,6 +25,7 @@ model ContentTemplate {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   steps    JourneyStep[]
+  campaigns Campaign[]
 }
 
 enum ContentType {
@@ -42,6 +43,7 @@ model Journey {
   updatedAt DateTime      @updatedAt
   status    JourneyStatus @default(DRAFT)
   steps     JourneyStep[]
+  campaigns Campaign[]
 }
 
 enum JourneyStatus {
@@ -69,4 +71,25 @@ model CustomerJourneyState {
   currentStepId String?
   status       String
   lastUpdated  DateTime @default(now())
+}
+
+model Campaign {
+  id         String          @id @default(uuid())
+  name       String
+  status     CampaignStatus  @default(DRAFT)
+  
+  templateId String
+  template   ContentTemplate @relation(fields: [templateId], references: [id])
+  
+  journeyId  String
+  journey    Journey         @relation(fields: [journeyId], references: [id])
+  
+  sentCount  Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENT
 }
