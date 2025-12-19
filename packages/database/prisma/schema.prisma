@@ -22,6 +22,8 @@ model ContentTemplate {
   name     String
   type     ContentType
   body     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
   steps    JourneyStep[]
 }
 
@@ -31,11 +33,15 @@ enum ContentType {
   CHECKOUT
 }
 
+
 model Journey {
-  id      String        @id @default(uuid())
-  name    String
-  status  JourneyStatus
-  steps   JourneyStep[]
+  id        String        @id @default(uuid())
+  name      String
+  slug      String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  status    JourneyStatus @default(DRAFT)
+  steps     JourneyStep[]
 }
 
 enum JourneyStatus {
@@ -46,19 +52,14 @@ enum JourneyStatus {
 }
 
 model JourneyStep {
-  id                String   @id @default(uuid())
-  journeyId         String
-  journey           Journey  @relation(fields: [journeyId], references: [id])
-  stepOrder         Int
-  type              StepType
-  contentTemplateId String?
-  contentTemplate   ContentTemplate? @relation(fields: [contentTemplateId], references: [id])
-}
+  id         String          @id @default(uuid())
+  order      Int
+  journeyId  String
+  journey    Journey         @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  templateId String
+  template   ContentTemplate @relation(fields: [templateId], references: [id])
 
-enum StepType {
-  SEND_EMAIL
-  RENDER_PAGE
-  DELAY
+  @@unique([journeyId, order])
 }
 
 model CustomerJourneyState {
