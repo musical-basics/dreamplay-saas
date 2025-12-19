@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev -p 3001",
-        "build": "next build && cp ../../node_modules/.pnpm/@prisma+engines*/node_modules/@prisma/engines/*engine-rhel-openssl-3.0.x* .next/server/ || echo 'Manual copy failed, but proceeding'",
+        "build": "next build",
         "start": "next start",
         "lint": "next lint"
     },
