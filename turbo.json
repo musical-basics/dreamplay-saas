@@ -5,7 +5,8 @@
     ],
     "globalEnv": [
         "DATABASE_URL",
-        "RESEND_API_KEY"
+        "RESEND_API_KEY",
+        "NEXT_PUBLIC_APP_URL"
     ],
     "tasks": {
         "build": {
