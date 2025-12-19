@@ -3,8 +3,12 @@
 import { Resend } from "resend";
 import mustache from "mustache";
 
-// Initialize Resend with API Key from env
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize safely or lazily
+const getResend = () => {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) throw new Error("RESEND_API_KEY is missing");
+    return new Resend(key);
+};
 
 export async function sendTestEmail(
     to: string,
@@ -20,7 +24,7 @@ export async function sendTestEmail(
     const renderedBody = mustache.render(templateBody, mockData);
 
     // 2. Send via Resend
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
         from: "DreamPlay <onboarding@resend.dev>", // Default Resend Testing Domain
         to: [to], // In test mode, must be the account owner's email usually
         subject: subject,
