@@ -54,6 +54,21 @@ export default async function NewCampaignPage() {
                     </div>
 
                     <div className="flex flex-col gap-2">
+                        <label htmlFor="audience" className="text-sm font-medium text-slate-700">
+                            Target Audience
+                        </label>
+                        <select
+                            name="audience"
+                            id="audience"
+                            required
+                            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                        >
+                            <option value="ALL">All Customers</option>
+                            <option value="TEST_GROUP">Test Group (Internal Only)</option>
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
                         <label htmlFor="journeyId" className="text-sm font-medium text-slate-700">
                             Target Journey
                         </label>
@@ -85,7 +100,7 @@ export default async function NewCampaignPage() {
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -12,6 +12,7 @@ export async function createCampaign(formData: FormData) {
     const name = formData.get("name") as string;
     const templateId = formData.get("templateId") as string;
     const journeyId = formData.get("journeyId") as string;
+    const audience = (formData.get("audience") as string) || "ALL";
 
     if (!name || !templateId || !journeyId) {
         throw new Error("Missing required fields");
@@ -22,6 +23,7 @@ export async function createCampaign(formData: FormData) {
             name,
             templateId,
             journeyId,
+            audience,
             status: "DRAFT",
         },
     });
@@ -45,22 +47,32 @@ export async function launchCampaign(campaignId: string) {
     if (!campaign) throw new Error("Campaign not found");
     if (campaign.status === "SENT") throw new Error("Campaign already sent");
 
-    // 2. Fetch Audience (All Customers for now)
-    const customers = await db.customer.findMany();
-    console.log(`Found ${customers.length} customers`);
+    // 2. Fetch Audience
+    const allCustomers = await db.customer.findMany();
+    let customers = allCustomers;
+
+    if (campaign.audience === "TEST_GROUP") {
+        customers = allCustomers.filter(c =>
+            c.email.endsWith("@musicalbasics.com") ||
+            c.email.endsWith("@dreamplaypianos.com")
+        );
+        console.log(`Test Group: Filtered ${allCustomers.length} down to ${customers.length} recipients.`);
+    }
+
+    console.log(`Sending to ${customers.length} customers...`);
 
     let sentCount = 0;
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    // 3. Loop and Send
+    // 3. Loop and Send (Sequential with Delay)
     for (const customer of customers) {
+        // Rate Limiting: 500ms delay to prevent 429s from Resend
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         try {
             // Construct personalized journey link
-            // e.g. http://localhost:3000/flow/onboarding?cid=123
             const journeyUrl = `${baseUrl}/flow/${campaign.journey.slug}?cid=${customer.id}`;
 
-            // Render Template
-            // Context includes customer fields + journey_url
             // Context includes customer fields + journey_url
             const context = {
                 ...customer, // Base customer fields
@@ -73,7 +85,7 @@ export async function launchCampaign(campaignId: string) {
 
             // Send via Resend
             const { error } = await resend.emails.send({
-                from: "DreamPlay <updates@resend.dev>", // TODO: Configurable sender
+                from: "DreamPlay <hello@dreamplaypianos.com>",
                 to: [customer.email],
                 subject: `[Campaign] ${campaign.name}`,
                 html: renderedBody,
@@ -101,4 +113,25 @@ export async function launchCampaign(campaignId: string) {
 
     revalidatePath("/campaigns");
     // return { success: true, sentCount }; // Void return for action compatibility
+}
+
+export async function duplicateCampaign(campaignId: string) {
+    const original = await db.campaign.findUnique({
+        where: { id: campaignId },
+    });
+
+    if (!original) throw new Error("Campaign not found");
+
+    await db.campaign.create({
+        data: {
+            name: `Copy of ${original.name}`,
+            templateId: original.templateId,
+            journeyId: original.journeyId,
+            audience: original.audience,
+            status: "DRAFT",
+        },
+    });
+
+    revalidatePath("/campaigns");
+    redirect("/campaigns");
 }

@@ -1,7 +1,8 @@
 import { db } from "@repo/database";
 import Link from "next/link";
-import { Plus, Send, CheckCircle } from "lucide-react";
-import { launchCampaign } from "../actions/campaigns";
+import { Plus, CheckCircle, Copy } from "lucide-react";
+import { duplicateCampaign } from "../actions/campaigns";
+import { LaunchButton } from "../../components/LaunchButton";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function CampaignsPage() {
                             <tr>
                                 <th className="px-6 py-3 font-semibold">Name</th>
                                 <th className="px-6 py-3 font-semibold">Status</th>
+                                <th className="px-6 py-3 font-semibold">Audience</th>
                                 <th className="px-6 py-3 font-semibold">Template</th>
                                 <th className="px-6 py-3 font-semibold">Journey</th>
                                 <th className="px-6 py-3 font-semibold">Sent</th>
@@ -46,37 +48,50 @@ export default async function CampaignsPage() {
                                     <td className="px-6 py-4">
                                         <span
                                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${campaign.status === "SENT"
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-yellow-100 text-yellow-800"
+                                                ? "bg-green-100 text-green-800"
+                                                : "bg-yellow-100 text-yellow-800"
                                                 }`}
                                         >
                                             {campaign.status}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4">
+                                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800">
+                                            {campaign.audience === "TEST_GROUP" ? "Test Group" : "All Customers"}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4">{campaign.template.name}</td>
                                     <td className="px-6 py-4">{campaign.journey.name}</td>
                                     <td className="px-6 py-4">{campaign.sentCount}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 flex items-center gap-2">
                                         {campaign.status === "DRAFT" && (
-                                            <form action={launchCampaign.bind(null, campaign.id)}>
-                                                <button className="flex items-center gap-1 rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">
-                                                    <Send className="h-3 w-3" />
-                                                    Launch
-                                                </button>
-                                            </form>
+                                            <LaunchButton
+                                                campaignId={campaign.id}
+                                                campaignName={campaign.name}
+                                                audience={campaign.audience === "TEST_GROUP" ? "Test Group (Internal)" : "All Customers"}
+                                            />
                                         )}
                                         {campaign.status === "SENT" && (
-                                            <div className="flex items-center gap-1 text-green-600">
+                                            <div className="flex items-center gap-1 text-green-600 px-3 py-1.5">
                                                 <CheckCircle className="h-4 w-4" />
-                                                <span>Done</span>
+                                                <span className="text-xs font-medium">Done</span>
                                             </div>
                                         )}
+
+                                        <form action={duplicateCampaign.bind(null, campaign.id)}>
+                                            <button
+                                                title="Duplicate Campaign"
+                                                className="flex items-center gap-1 rounded bg-white border border-slate-300 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                                            >
+                                                <Copy className="h-3 w-3" />
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             ))}
                             {campaigns.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                                         No campaigns yet. Create one to get started.
                                     </td>
                                 </tr>
