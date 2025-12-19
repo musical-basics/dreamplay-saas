@@ -14,6 +14,7 @@ model Customer {
   shopifyCustomerId String?
   createdAt         DateTime               @default(now())
   journeyStates     CustomerJourneyState[]
+  analyticsEvents   AnalyticsEvent[]
 }
 
 model ContentTemplate {
@@ -26,6 +27,7 @@ model ContentTemplate {
   updatedAt DateTime      @updatedAt
   steps    JourneyStep[]
   campaigns Campaign[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 enum ContentType {
@@ -44,6 +46,7 @@ model Journey {
   status    JourneyStatus @default(DRAFT)
   steps     JourneyStep[]
   campaigns Campaign[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 enum JourneyStatus {
@@ -93,4 +96,22 @@ model Campaign {
 enum CampaignStatus {
   DRAFT
   SENT
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  type      String   // "VIEW", "CLICK"
+  url       String
+  meta      Json?
+  
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  
+  journeyId  String?
+  journey    Journey?  @relation(fields: [journeyId], references: [id])
+  
+  templateId String?
+  template   ContentTemplate? @relation(fields: [templateId], references: [id])
+  
+  createdAt DateTime @default(now())
 }
