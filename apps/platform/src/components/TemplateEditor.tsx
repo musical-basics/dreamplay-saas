@@ -47,6 +47,31 @@ export function TemplateEditor({ initialData }: TemplateEditorProps) {
         }
     };
 
+    const handleSendTest = async () => {
+        if (type !== "EMAIL") return;
+
+        const email = window.prompt("Enter email address for test:");
+        if (!email) return;
+
+        try {
+            // Dynamically import to ensure server action is handled correctly if needed, though direct import usually works in Next.js
+            const { sendTestEmail } = await import("../app/actions/email");
+
+            const mockData = {
+                name: "Test User",
+                journey_url: "http://localhost:3000/flow/demo",
+            };
+
+            const result = await sendTestEmail(email, "[TEST] " + name, body, mockData);
+            if (result.success) {
+                alert(`Test email sent to ${email}! (ID: ${result.id})`);
+            }
+        } catch (e: any) {
+            console.error(e);
+            alert("Failed to send email: " + e.message);
+        }
+    };
+
     return (
         <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -92,14 +117,24 @@ export function TemplateEditor({ initialData }: TemplateEditorProps) {
                         </select>
                     </div>
                 </div>
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                    <Save className="h-4 w-4" />
-                    {isSaving ? "Saving..." : isNew ? "Create Template" : "Update Template"}
-                </button>
+                <div className="flex items-center gap-2">
+                    {type === "EMAIL" && (
+                        <button
+                            onClick={handleSendTest}
+                            className="rounded-md bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50"
+                        >
+                            Send Test
+                        </button>
+                    )}
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        <Save className="h-4 w-4" />
+                        {isSaving ? "Saving..." : isNew ? "Create Template" : "Update Template"}
+                    </button>
+                </div>
             </div>
 
             <div className="flex-1 overflow-hidden rounded-lg border border-slate-200 shadow-sm">
