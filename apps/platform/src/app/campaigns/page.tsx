@@ -5,6 +5,7 @@ import { duplicateCampaign } from "../actions/campaigns";
 import { LaunchButton } from "../../components/LaunchButton";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function CampaignsPage() {
     const campaigns = await db.campaign.findMany({

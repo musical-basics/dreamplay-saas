@@ -2,6 +2,7 @@ import { db } from "@repo/database";
 import { createCampaign } from "../../actions/campaigns";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function NewCampaignPage() {
     // Fetch available templates (EMAIL only) and journeys
