@@ -77,15 +77,27 @@ export async function moveStep(journeyId: string, stepId: string, direction: "UP
     });
 
     if (swapStep) {
-        // Transaction to swap orders
+        // Use a 3-step swap with a temporary order value to avoid unique constraint violation
+        // Step 1: Move current step to a temporary order (negative to avoid conflicts)
+        // Step 2: Move swap step to current step's original order
+        // Step 3: Move current step from temporary to target order
+        const tempOrder = -9999;
+
         await db.$transaction([
+            // Step 1: Current step -> temp order
             db.journeyStep.update({
                 where: { id: currentStep.id },
-                data: { order: targetOrder },
+                data: { order: tempOrder },
             }),
+            // Step 2: Swap step -> current step's original order
             db.journeyStep.update({
                 where: { id: swapStep.id },
                 data: { order: currentStep.order },
+            }),
+            // Step 3: Current step -> target order
+            db.journeyStep.update({
+                where: { id: currentStep.id },
+                data: { order: targetOrder },
             }),
         ]);
     }
