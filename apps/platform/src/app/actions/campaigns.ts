@@ -6,7 +6,13 @@ import { Resend } from "resend";
 import mustache from "mustache";
 import { redirect } from "next/navigation";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Initialize safely or lazily
+const getResend = () => {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) throw new Error("RESEND_API_KEY is missing");
+    return new Resend(key);
+};
 
 export async function createCampaign(formData: FormData) {
     const name = formData.get("name") as string;
@@ -84,7 +90,7 @@ export async function launchCampaign(campaignId: string) {
             const renderedBody = mustache.render(campaign.template.body, context);
 
             // Send via Resend
-            const { error } = await resend.emails.send({
+            const { error } = await getResend().emails.send({
                 from: "DreamPlay <hello@dreamplaypianos.com>",
                 to: [customer.email],
                 subject: `[Campaign] ${campaign.name}`,
