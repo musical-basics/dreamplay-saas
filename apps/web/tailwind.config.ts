@@ -9,6 +9,15 @@ const config: Config = {
     theme: {
         extend: {},
     },
+    safelist: [
+        {
+            pattern: /^(bg|text|border|p|m|w|h|gap|rounded|shadow|flex|grid|justify|items)-.+/,
+        },
+        "block",
+        "inline-block",
+        "hidden",
+        "object-cover",
+    ],
     plugins: [],
 };
 export default config;
