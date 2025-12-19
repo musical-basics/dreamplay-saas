@@ -91,6 +91,7 @@ model Campaign {
   sentCount  Int             @default(0)
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
+  analyticsEvents AnalyticsEvent[]
 }
 
 enum CampaignStatus {
@@ -112,6 +113,9 @@ model AnalyticsEvent {
   
   templateId String?
   template   ContentTemplate? @relation(fields: [templateId], references: [id])
+  
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
   
   createdAt DateTime @default(now())
 }

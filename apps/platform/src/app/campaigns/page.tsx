@@ -9,7 +9,11 @@ export const dynamic = "force-dynamic";
 export default async function CampaignsPage() {
     const campaigns = await db.campaign.findMany({
         orderBy: { createdAt: "desc" },
-        include: { template: true, journey: true },
+        include: {
+            template: true,
+            journey: true,
+            analyticsEvents: true
+        },
     });
 
     return (
@@ -36,6 +40,8 @@ export default async function CampaignsPage() {
                                 <th className="px-6 py-3 font-semibold">Template</th>
                                 <th className="px-6 py-3 font-semibold">Journey</th>
                                 <th className="px-6 py-3 font-semibold">Sent</th>
+                                <th className="px-6 py-3 font-semibold">Opens</th>
+                                <th className="px-6 py-3 font-semibold">Clicks</th>
                                 <th className="px-6 py-3 font-semibold">Actions</th>
                             </tr>
                         </thead>
@@ -63,6 +69,22 @@ export default async function CampaignsPage() {
                                     <td className="px-6 py-4">{campaign.template.name}</td>
                                     <td className="px-6 py-4">{campaign.journey.name}</td>
                                     <td className="px-6 py-4">{campaign.sentCount}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="text-sm text-slate-900">
+                                            {campaign.analyticsEvents.filter((e: any) => e.type === "EMAIL_OPEN").length}
+                                            <span className="text-xs text-slate-500 ml-1">
+                                                ({campaign.sentCount > 0 ? Math.round((campaign.analyticsEvents.filter((e: any) => e.type === "EMAIL_OPEN").length / campaign.sentCount) * 100) : 0}%)
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="text-sm text-slate-900">
+                                            {campaign.analyticsEvents.filter((e: any) => e.type === "EMAIL_CLICK").length}
+                                            <span className="text-xs text-slate-500 ml-1">
+                                                ({campaign.sentCount > 0 ? Math.round((campaign.analyticsEvents.filter((e: any) => e.type === "EMAIL_CLICK").length / campaign.sentCount) * 100) : 0}%)
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 flex items-center gap-2">
                                         {campaign.status === "DRAFT" && (
                                             <LaunchButton

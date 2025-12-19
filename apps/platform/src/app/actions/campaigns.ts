@@ -89,6 +89,9 @@ export async function launchCampaign(campaignId: string) {
                 to: [customer.email],
                 subject: `[Campaign] ${campaign.name}`,
                 html: renderedBody,
+                tags: [
+                    { name: 'campaignId', value: campaign.id }
+                ]
             });
 
             if (error) {
