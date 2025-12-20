@@ -1,5 +1,5 @@
 import { db } from "@repo/database";
-import { TemplateEditor } from "../../../components/TemplateEditor";
+import { VisualTemplateEditor } from "../../../components/VisualTemplateEditor";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +22,6 @@ export default async function TemplatePage({
         }
     }
 
-    return (
-        <div className="h-full">
-            <div className="mb-4">
-                <h1 className="text-2xl font-bold text-slate-900">
-                    {isNew ? "Create New Template" : `Edit: ${template?.name}`}
-                </h1>
-            </div>
-            <TemplateEditor initialData={template} />
-        </div>
-    );
+    return <VisualTemplateEditor initialData={template} />;
 }
+
