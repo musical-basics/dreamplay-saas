@@ -173,7 +173,10 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
 
     const handleAssetSelect = (url: string) => {
         if (activeVariable) {
-            handleVariableChange(activeVariable, url);
+            // Replace the variable in the body with the URL
+            const regex = new RegExp(`\\{\\{\\s*${activeVariable}\\s*\\}\\}`, 'g');
+            const newBody = body.replace(regex, url);
+            setBody(newBody);
         }
         setAssetPickerOpen(false);
         setActiveVariable(null);
