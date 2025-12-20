@@ -86,7 +86,6 @@ export default async function JourneysPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700"
-                                    onClick={(e) => e.stopPropagation()}
                                     title="View Journey"
                                 >
                                     <ExternalLink className="h-4 w-4" />
