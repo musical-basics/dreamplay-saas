@@ -1,6 +1,6 @@
 import { db } from "@repo/database";
 import { createJourney } from "../actions/journeys";
-import { Plus, Map, ArrowRight } from "lucide-react";
+import { Plus, Map, ArrowRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -61,8 +61,8 @@ export default async function JourneysPage() {
                                 </div>
                                 <span
                                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${journey.status === "ACTIVE"
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-slate-100 text-slate-800"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-slate-100 text-slate-800"
                                         }`}
                                 >
                                     {journey.status}
@@ -80,9 +80,21 @@ export default async function JourneysPage() {
                             <span className="text-sm font-medium text-slate-600">
                                 {journey._count.steps} Steps
                             </span>
-                            <span className="flex items-center text-sm font-medium text-blue-600 opacity-0 transition group-hover:opacity-100">
-                                Edit Builder <ArrowRight className="ml-1 h-4 w-4" />
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <a
+                                    href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/flow/${journey.slug}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="View Journey"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                </a>
+                                <span className="flex items-center text-sm font-medium text-blue-600 opacity-0 transition group-hover:opacity-100">
+                                    Edit Builder <ArrowRight className="ml-1 h-4 w-4" />
+                                </span>
+                            </div>
                         </div>
                     </Link>
                 ))}

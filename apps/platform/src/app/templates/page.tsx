@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@repo/database";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -49,12 +49,26 @@ export default async function TemplatesPage() {
                                     </span>
                                 </td>
                                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                                    <Link
-                                        href={`/templates/${template.id}`}
-                                        className="text-blue-600 hover:text-blue-900"
-                                    >
-                                        <Edit className="ml-auto h-4 w-4" />
-                                    </Link>
+                                    <div className="flex items-center justify-end gap-3">
+                                        {template.type !== "EMAIL" && (
+                                            <a
+                                                href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${template.slug}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-slate-500 hover:text-slate-700"
+                                                title="View Template"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        )}
+                                        <Link
+                                            href={`/templates/${template.id}`}
+                                            className="text-blue-600 hover:text-blue-900"
+                                            title="Edit Template"
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Link>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
