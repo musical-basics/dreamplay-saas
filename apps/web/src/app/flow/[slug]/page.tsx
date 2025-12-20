@@ -39,27 +39,32 @@ export default async function JourneyFlowPage({ params, searchParams }: PageProp
     }
 
     // 2. Identify Current Step
-    // Expect ?step=1 for 1st step. Default to 1.
+    // Use 1-based step index (step=1 means first step, step=2 means second step, etc.)
     const stepParam = searchParams.step ? parseInt(searchParams.step as string) : 1;
-    const currentOrder = isNaN(stepParam) ? 1 : stepParam;
+    const stepIndex = isNaN(stepParam) || stepParam < 1 ? 0 : stepParam - 1;
 
-    // Find the step with this order
-    const currentStep = journey.steps.find((s) => s.order === currentOrder);
+    // Check if journey has no steps
+    if (journey.steps.length === 0) {
+        return <div className="p-10 text-center font-sans">This journey has no steps configured yet.</div>;
+    }
 
-    if (!currentStep) {
-        // If step is out of bounds:
-        // If step > total, maybe show completion?
-        if (currentOrder > journey.steps.length) {
-            return <div className="p-10 text-center font-sans">Journey Completed!</div>
-        }
-        // If step < 1 or invalid, redirect to step 1
-        redirect(`/flow/${slug}?step=1`);
+    // If step index is beyond available steps, show completion
+    if (stepIndex >= journey.steps.length) {
+        return <div className="p-10 text-center font-sans">Journey Completed!</div>;
+    }
+
+    // Get current step by array index (steps are already sorted by order)
+    const currentStep = journey.steps[stepIndex];
+
+    if (!currentStep || !currentStep.template) {
+        return <div className="p-10 text-center font-sans">Step not found or template missing.</div>;
     }
 
     // 3. Identify Next Step
-    const nextStep = journey.steps.find((s) => s.order === currentOrder + 1);
-    const nextStepUrl = nextStep
-        ? `/flow/${slug}?step=${nextStep.order}`
+    const nextStepIndex = stepIndex + 1;
+    const hasNextStep = nextStepIndex < journey.steps.length;
+    const nextStepUrl = hasNextStep
+        ? `/flow/${slug}?step=${nextStepIndex + 1}`
         : "#"; // Or a "completed" URL
 
     // 4. Data Context Merging (Reusing logic from Smart Templates)
@@ -68,19 +73,17 @@ export default async function JourneyFlowPage({ params, searchParams }: PageProp
     // Inject next_step variable specially
     data["next_step"] = nextStepUrl;
 
-    // Customer Lookup
-    const customerId = searchParams.customerId as string;
+    // Customer Lookup (supports both customerId and cid from emails)
+    const customerId = (searchParams.customerId || searchParams.cid) as string;
     if (customerId) {
         const customer = await db.customer.findUnique({
             where: { id: customerId },
         });
         if (customer) {
             data = { ...data, ...customer };
-            // Maintain customerId in next step link if strictly needed?
-            // actually next_step link above doesn't preserve other params.
-            // Let's improve next_step to preserve customerId
-            if (nextStep) {
-                data["next_step"] = `/flow/${slug}?step=${nextStep.order}&customerId=${customerId}`;
+            // Preserve customerId in next step link
+            if (hasNextStep) {
+                data["next_step"] = `/flow/${slug}?step=${nextStepIndex + 1}&cid=${customerId}`;
             }
         }
     }
@@ -95,3 +98,4 @@ export default async function JourneyFlowPage({ params, searchParams }: PageProp
         />
     );
 }
+
