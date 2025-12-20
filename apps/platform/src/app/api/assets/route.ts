@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin, getPublicUrl } from "../../../lib/supabase";
+import { getSupabaseAdmin } from "../../../lib/supabase";
 
 export async function GET() {
     try {
@@ -22,18 +22,31 @@ export async function GET() {
             );
         }
 
-        // Filter out folders and map to include public URLs
-        const assets = (data || [])
-            .filter((item) => item.id !== null) // Filter out folders
-            .map((item) => ({
+        console.log("Raw storage list response:", JSON.stringify(data, null, 2));
+
+        // Filter out folders (items without an id) and .emptyFolderPlaceholder files
+        const files = (data || []).filter(
+            (item) => item.id !== null && !item.name.startsWith(".")
+        );
+
+        // Map to include public URLs using Supabase's getPublicUrl method
+        const assets = files.map((item) => {
+            const { data: urlData } = supabase.storage
+                .from("assets")
+                .getPublicUrl(item.name);
+
+            return {
                 id: item.id,
                 name: item.name,
-                url: getPublicUrl("assets", item.name),
+                url: urlData.publicUrl,
                 path: item.name,
                 mimeType: item.metadata?.mimetype,
                 size: item.metadata?.size,
                 createdAt: item.created_at,
-            }));
+            };
+        });
+
+        console.log("Returning assets:", assets.length);
 
         return NextResponse.json({ assets });
     } catch (error) {
@@ -44,3 +57,4 @@ export async function GET() {
         );
     }
 }
+
