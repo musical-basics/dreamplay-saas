@@ -26,19 +26,44 @@ export async function POST(req: NextRequest) {
             campaignId = data.tags.campaignId || null;
         }
 
-        if (campaignId) {
-            await db.analyticsEvent.create({
-                data: {
-                    type: type === 'email.opened' ? 'EMAIL_OPEN' : 'EMAIL_CLICK',
-                    url: type === 'email.clicked' && data.click?.link ? data.click.link : '',
-                    campaignId: campaignId,
-                    meta: body, // Store exact payload for debugging
-                }
-            });
-            console.log(`[Analytics] Tracked ${type} for Campaign ${campaignId}`);
-        } else {
+        if (!campaignId) {
             console.log(`[Analytics] Ignored ${type} - No Campaign ID. Tags received:`, JSON.stringify(data?.tags));
+            return NextResponse.json({ success: true }, { status: 200 });
         }
+
+        // Deduplication: Use email_id + event type to prevent double-counting
+        // Resend provides email_id in the webhook payload
+        const emailId = data?.email_id;
+        const eventType = type === 'email.opened' ? 'EMAIL_OPEN' : 'EMAIL_CLICK';
+
+        if (emailId) {
+            // Check if we've already recorded this specific event for this email
+            const existingEvent = await db.analyticsEvent.findFirst({
+                where: {
+                    campaignId: campaignId,
+                    type: eventType,
+                    meta: {
+                        path: ['data', 'email_id'],
+                        equals: emailId,
+                    },
+                },
+            });
+
+            if (existingEvent) {
+                console.log(`[Analytics] Duplicate ${type} ignored for email ${emailId}`);
+                return NextResponse.json({ success: true, deduplicated: true }, { status: 200 });
+            }
+        }
+
+        await db.analyticsEvent.create({
+            data: {
+                type: eventType,
+                url: type === 'email.clicked' && data.click?.link ? data.click.link : '',
+                campaignId: campaignId,
+                meta: body, // Store exact payload for debugging and deduplication
+            }
+        });
+        console.log(`[Analytics] Tracked ${type} for Campaign ${campaignId}`);
 
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (error) {
@@ -46,3 +71,4 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
