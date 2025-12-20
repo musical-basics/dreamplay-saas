@@ -2,15 +2,15 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { X, Upload, Check, Loader2 } from "lucide-react";
-import { getAssets, createAsset } from "../app/actions/assets";
 
 interface Asset {
     id: string;
     name: string;
     url: string;
+    path?: string;
     mimeType?: string | null;
     size?: number | null;
-    createdAt: Date;
+    createdAt?: string;
 }
 
 interface AssetPickerModalProps {
@@ -19,25 +19,36 @@ interface AssetPickerModalProps {
     onSelect: (url: string) => void;
 }
 
-// Simple function to upload to a public image host (using imgbb as fallback)
-// In production, you should use your own storage (Supabase, S3, Cloudinary, etc.)
-async function uploadToStorage(file: File): Promise<string> {
-    // For now, we'll use a simple approach: convert to base64 data URL
-    // In production, replace this with real storage like Supabase Storage
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            // Check if result is a reasonable size (less than 5MB for data URLs)
-            const result = reader.result as string;
-            if (result.length > 5 * 1024 * 1024) {
-                reject(new Error("File too large. Please use a smaller image."));
-                return;
-            }
-            resolve(result);
-        };
-        reader.onerror = () => reject(new Error("Failed to read file"));
-        reader.readAsDataURL(file);
+// Upload file using API route (supports files up to 50MB)
+async function uploadFile(file: File): Promise<Asset> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
     });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Upload failed");
+    }
+
+    const data = await response.json();
+    return data.asset;
+}
+
+// Fetch assets from Supabase Storage via API
+async function fetchAssets(): Promise<Asset[]> {
+    const response = await fetch("/api/assets");
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to load assets");
+    }
+
+    const data = await response.json();
+    return data.assets;
 }
 
 export function AssetPickerModal({ isOpen, onClose, onSelect }: AssetPickerModalProps) {
@@ -57,8 +68,8 @@ export function AssetPickerModal({ isOpen, onClose, onSelect }: AssetPickerModal
     const loadAssets = async () => {
         setIsLoading(true);
         try {
-            const data = await getAssets();
-            setAssets(data as Asset[]);
+            const data = await fetchAssets();
+            setAssets(data);
         } catch (error) {
             console.error("Failed to load assets:", error);
         } finally {
@@ -77,16 +88,14 @@ export function AssetPickerModal({ isOpen, onClose, onSelect }: AssetPickerModal
                     continue;
                 }
 
-                // Upload to storage
-                const url = await uploadToStorage(file);
+                // Check file size (50MB limit)
+                if (file.size > 50 * 1024 * 1024) {
+                    alert("File size exceeds 50MB limit");
+                    continue;
+                }
 
-                // Create asset record
-                await createAsset({
-                    name: `${Date.now()}-${file.name}`,
-                    url,
-                    mimeType: file.type,
-                    size: file.size,
-                });
+                // Upload using API route
+                await uploadFile(file);
             }
             // Reload assets
             await loadAssets();
@@ -152,7 +161,7 @@ export function AssetPickerModal({ isOpen, onClose, onSelect }: AssetPickerModal
                         {isUploading ? (
                             <>
                                 <Loader2 className="mb-2 h-8 w-8 animate-spin text-slate-400" />
-                                <p className="text-sm text-slate-400">Uploading...</p>
+                                <p className="text-sm text-slate-400">Uploading to cloud storage...</p>
                             </>
                         ) : (
                             <>
@@ -170,6 +179,7 @@ export function AssetPickerModal({ isOpen, onClose, onSelect }: AssetPickerModal
                                         />
                                     </label>
                                 </p>
+                                <p className="mt-1 text-xs text-slate-500">Max 50MB per file</p>
                             </>
                         )}
                     </div>
@@ -218,7 +228,7 @@ export function AssetPickerModal({ isOpen, onClose, onSelect }: AssetPickerModal
                 {/* Footer */}
                 <div className="flex items-center justify-between border-t border-slate-700 px-6 py-4">
                     <p className="text-sm text-slate-500">
-                        Showing {assets.length} assets
+                        Showing {assets.length} assets from cloud storage
                     </p>
                     <div className="flex gap-3">
                         <button

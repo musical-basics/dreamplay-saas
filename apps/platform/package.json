@@ -13,6 +13,7 @@
         "@monaco-editor/react": "^4.7.0",
         "@prisma/client": "^5.22.0",
         "@repo/database": "workspace:*",
+        "@supabase/supabase-js": "^2.89.0",
         "clsx": "^2.1.1",
         "lucide-react": "^0.562.0",
         "mustache": "^4.2.0",
