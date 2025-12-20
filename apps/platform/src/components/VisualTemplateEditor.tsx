@@ -15,6 +15,7 @@ import {
     Rocket
 } from "lucide-react";
 import Link from "next/link";
+import { AssetPickerModal } from "./AssetPickerModal";
 
 interface VisualTemplateEditorProps {
     initialData?: {
@@ -64,6 +65,8 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
     const [isSaving, setIsSaving] = useState(false);
     const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
     const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+    const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+    const [activeVariable, setActiveVariable] = useState<string | null>(null);
 
     const isNew = !initialData;
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -163,6 +166,19 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
         return urlPatterns.some(p => name.toLowerCase().includes(p));
     };
 
+    const openAssetPicker = (variable: string) => {
+        setActiveVariable(variable);
+        setAssetPickerOpen(true);
+    };
+
+    const handleAssetSelect = (url: string) => {
+        if (activeVariable) {
+            handleVariableChange(activeVariable, url);
+        }
+        setAssetPickerOpen(false);
+        setActiveVariable(null);
+    };
+
     return (
         <div className="flex h-screen flex-col bg-slate-900">
             {/* Top Bar */}
@@ -221,7 +237,13 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                                         <label className="flex items-center justify-between text-xs text-slate-400">
                                             <span>{`{{${variable}}}`}</span>
                                             {isUrlVariable(variable) && (
-                                                <Upload className="h-3 w-3" />
+                                                <button
+                                                    onClick={() => openAssetPicker(variable)}
+                                                    className="rounded p-0.5 hover:bg-slate-600"
+                                                    title="Browse Assets"
+                                                >
+                                                    <Upload className="h-3 w-3" />
+                                                </button>
                                             )}
                                         </label>
                                         {isUrlVariable(variable) ? (
@@ -333,8 +355,8 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                             <button
                                 onClick={() => setPreviewMode("desktop")}
                                 className={`rounded px-2 py-1 text-xs ${previewMode === "desktop"
-                                        ? "bg-slate-600 text-white"
-                                        : "text-slate-400 hover:text-white"
+                                    ? "bg-slate-600 text-white"
+                                    : "text-slate-400 hover:text-white"
                                     }`}
                             >
                                 <Monitor className="h-4 w-4" />
@@ -342,8 +364,8 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                             <button
                                 onClick={() => setPreviewMode("mobile")}
                                 className={`rounded px-2 py-1 text-xs ${previewMode === "mobile"
-                                        ? "bg-slate-600 text-white"
-                                        : "text-slate-400 hover:text-white"
+                                    ? "bg-slate-600 text-white"
+                                    : "text-slate-400 hover:text-white"
                                     }`}
                             >
                                 <Smartphone className="h-4 w-4" />
@@ -354,8 +376,8 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                     <div className="flex flex-1 items-start justify-center overflow-auto bg-slate-850 p-4 bg-[#1a1a1a]">
                         <div
                             className={`relative bg-white shadow-2xl transition-all duration-300 ${previewMode === "mobile"
-                                    ? "w-[375px] rounded-[2rem] border-4 border-slate-600"
-                                    : "w-full rounded"
+                                ? "w-[375px] rounded-[2rem] border-4 border-slate-600"
+                                : "w-full rounded"
                                 }`}
                             style={{
                                 minHeight: previewMode === "mobile" ? "667px" : "auto",
@@ -377,6 +399,16 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                     </div>
                 </div>
             </div>
+
+            {/* Asset Picker Modal */}
+            <AssetPickerModal
+                isOpen={assetPickerOpen}
+                onClose={() => {
+                    setAssetPickerOpen(false);
+                    setActiveVariable(null);
+                }}
+                onSelect={handleAssetSelect}
+            />
         </div>
     );
 }

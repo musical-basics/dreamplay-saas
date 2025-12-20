@@ -120,3 +120,13 @@ model AnalyticsEvent {
   
   createdAt DateTime @default(now())
 }
+
+model Asset {
+  id        String   @id @default(uuid())
+  name      String
+  url       String   @unique
+  mimeType  String?
+  size      Int?     // Size in bytes
+  createdAt DateTime @default(now())
+}
+
