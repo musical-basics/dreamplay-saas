@@ -20,28 +20,39 @@ export async function createTemplate(formData: FormData) {
         }
     }
 
-    await db.contentTemplate.create({
-        data: {
-            name,
-            slug,
-            type,
-            body,
-            previewData,
-        } as any,
-    });
+    try {
+        await db.contentTemplate.create({
+            data: {
+                name,
+                slug,
+                type,
+                body,
+                previewData,
+            } as any,
+        });
 
-    revalidatePath("/templates");
+        revalidatePath("/templates");
+    } catch (error) {
+        console.error("FATAL: Failed to create template:", error);
+        throw error; // Re-throw so UI shows error
+    }
     redirect("/templates");
 }
 
 export async function updateTemplate(id: string, data: { body?: string; slug?: string; name?: string; type?: "EMAIL" | "LANDING" | "CHECKOUT"; previewData?: any }) {
-    await db.contentTemplate.update({
-        where: { id },
-        data: data as any,
-    });
+    try {
+        console.log("Updating template with data:", JSON.stringify(data, null, 2));
+        await db.contentTemplate.update({
+            where: { id },
+            data: data as any,
+        });
 
-    revalidatePath(`/templates/${id}`);
-    revalidatePath("/templates");
+        revalidatePath(`/templates/${id}`);
+        revalidatePath("/templates");
+    } catch (error) {
+        console.error("FATAL: Failed to update template:", error);
+        throw error;
+    }
 }
 
 export async function createTemplateFromJson(data: { name: string; slug: string; type: "EMAIL" | "LANDING" | "CHECKOUT"; body: string }) {
