@@ -24,7 +24,7 @@ interface VisualTemplateEditorProps {
         slug: string;
         type: "EMAIL" | "LANDING" | "CHECKOUT";
         body: string;
-        previewData?: Record<string, string> | null;
+        previewData?: unknown;
     } | null;
 }
 
