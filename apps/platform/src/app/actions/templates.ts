@@ -9,6 +9,16 @@ export async function createTemplate(formData: FormData) {
     const slug = formData.get("slug") as string;
     const type = formData.get("type") as "EMAIL" | "LANDING" | "CHECKOUT";
     const body = formData.get("body") as string;
+    const previewDataStr = formData.get("previewData") as string;
+
+    let previewData = {};
+    if (previewDataStr) {
+        try {
+            previewData = JSON.parse(previewDataStr);
+        } catch (e) {
+            console.error("Failed to parse previewData", e);
+        }
+    }
 
     await db.contentTemplate.create({
         data: {
@@ -16,17 +26,18 @@ export async function createTemplate(formData: FormData) {
             slug,
             type,
             body,
-        },
+            previewData,
+        } as any,
     });
 
     revalidatePath("/templates");
     redirect("/templates");
 }
 
-export async function updateTemplate(id: string, data: { body?: string; slug?: string; name?: string; type?: "EMAIL" | "LANDING" | "CHECKOUT" }) {
+export async function updateTemplate(id: string, data: { body?: string; slug?: string; name?: string; type?: "EMAIL" | "LANDING" | "CHECKOUT"; previewData?: any }) {
     await db.contentTemplate.update({
         where: { id },
-        data: data,
+        data: data as any,
     });
 
     revalidatePath(`/templates/${id}`);

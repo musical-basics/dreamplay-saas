@@ -24,6 +24,7 @@ interface VisualTemplateEditorProps {
         slug: string;
         type: "EMAIL" | "LANDING" | "CHECKOUT";
         body: string;
+        previewData?: Record<string, string> | null;
     } | null;
 }
 
@@ -64,7 +65,12 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
     // UI state
     const [isSaving, setIsSaving] = useState(false);
     const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-    const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+
+    // Initialize variable values from saved previewData or defaults
+    const [variableValues, setVariableValues] = useState<Record<string, string>>(() => {
+        return (initialData?.previewData as Record<string, string>) || {};
+    });
+
     const [assetPickerOpen, setAssetPickerOpen] = useState(false);
     const [activeVariable, setActiveVariable] = useState<string | null>(null);
 
@@ -80,7 +86,8 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
             const updated = { ...prev };
             for (const variable of detectedVariables) {
                 if (!(variable in updated)) {
-                    updated[variable] = "";
+                    // Try to preserve existing value if variable was just re-detected, otherwise empty
+                    updated[variable] = prev[variable] || "";
                 }
             }
             // Remove old variables that no longer exist
@@ -126,9 +133,16 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                 formData.append("slug", slug);
                 formData.append("type", type);
                 formData.append("body", body);
+                formData.append("previewData", JSON.stringify(variableValues));
                 await createTemplate(formData);
             } else {
-                await updateTemplate(initialData.id, { body, slug, name, type });
+                await updateTemplate(initialData.id, {
+                    body,
+                    slug,
+                    name,
+                    type,
+                    previewData: variableValues
+                });
             }
         } catch (error) {
             console.error("Failed to save:", error);
@@ -173,10 +187,7 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
 
     const handleAssetSelect = (url: string) => {
         if (activeVariable) {
-            // Replace the variable in the body with the URL
-            const regex = new RegExp(`\\{\\{\\s*${activeVariable}\\s*\\}\\}`, 'g');
-            const newBody = body.replace(regex, url);
-            setBody(newBody);
+            handleVariableChange(activeVariable, url);
         }
         setAssetPickerOpen(false);
         setActiveVariable(null);
