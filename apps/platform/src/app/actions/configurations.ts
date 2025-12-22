@@ -97,6 +97,7 @@ export async function deleteConfiguration(id: string) {
 export async function createNavLink(configurationId: string, formData: FormData) {
     const label = formData.get("label") as string;
     const url = formData.get("url") as string;
+    const forceRefresh = formData.get("forceRefresh") === "on";
 
     // Get the highest order number
     const lastLink = await db.navLink.findFirst({
@@ -109,6 +110,7 @@ export async function createNavLink(configurationId: string, formData: FormData)
             label,
             url,
             order: (lastLink?.order || 0) + 1,
+            forceRefresh,
             configurationId,
         },
     });

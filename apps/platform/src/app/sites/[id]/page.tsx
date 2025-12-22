@@ -111,6 +111,14 @@ export default async function SiteDetailPage({ params }: PageProps) {
                                 required
                                 className="flex-1 rounded border border-slate-600 bg-slate-700 px-2 py-1 text-sm text-white placeholder-slate-400"
                             />
+                            <label className="flex items-center gap-1 text-xs text-slate-400" title="Force full page reload for script-heavy pages">
+                                <input
+                                    name="forceRefresh"
+                                    type="checkbox"
+                                    className="h-4 w-4 rounded border-slate-600 bg-slate-700"
+                                />
+                                Hard Refresh
+                            </label>
                             <button
                                 type="submit"
                                 className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-500"
@@ -126,14 +134,19 @@ export default async function SiteDetailPage({ params }: PageProps) {
                                 No nav links yet
                             </p>
                         ) : (
-                            site.navLinks.map((link) => (
+                            site.navLinks.map((link: any) => (
                                 <div
                                     key={link.id}
                                     className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 p-3"
                                 >
-                                    <div>
+                                    <div className="flex items-center gap-2">
                                         <span className="font-medium text-white">{link.label}</span>
-                                        <span className="ml-2 text-sm text-slate-400">{link.url}</span>
+                                        <span className="text-sm text-slate-400">{link.url}</span>
+                                        {link.forceRefresh && (
+                                            <span className="rounded bg-orange-600/20 px-1.5 py-0.5 text-xs text-orange-400">
+                                                Hard Refresh
+                                            </span>
+                                        )}
                                     </div>
                                     <form action={async () => {
                                         "use server";

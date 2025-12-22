@@ -66,6 +66,7 @@ model NavLink {
   label           String
   url             String
   order           Int
+  forceRefresh    Boolean       @default(false) // Force full page reload for script-heavy pages
   configurationId String
   configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
 }

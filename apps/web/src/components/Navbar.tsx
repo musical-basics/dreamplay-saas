@@ -9,6 +9,7 @@ interface NavLink {
     id?: string;
     label: string;
     url: string;
+    forceRefresh?: boolean; // From database - force full page reload
 }
 
 interface NavbarProps {
@@ -88,8 +89,8 @@ export default function Navbar({ links = [] }: NavbarProps) {
                         {/* Dynamic Loop from Database */}
                         {links.length > 0 ? (
                             links.map((link, index) => {
-                                // LOGIC: Force hard refresh for script-heavy pages like /customize
-                                const isHardRefresh = link.url.includes('/customize');
+                                // Use database field instead of hardcoded URL matching
+                                const isHardRefresh = link.forceRefresh === true;
 
                                 return (
                                     <React.Fragment key={link.id || index}>
