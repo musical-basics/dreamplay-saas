@@ -2,7 +2,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Navbar from "../components/Navbar";
+// Navbar removed - now rendered dynamically in page.tsx with configuration links
 import Footer from "../components/Footer";
 import AnalyticsTracker from "../components/AnalyticsTracker";
 
@@ -21,7 +21,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <Navbar />
+                {/* Navbar is now rendered in page.tsx with dynamic configuration links */}
                 <Suspense fallback={null}>
                     <AnalyticsTracker />
                 </Suspense>
@@ -31,4 +31,3 @@ export default function RootLayout({
         </html>
     );
 }
-

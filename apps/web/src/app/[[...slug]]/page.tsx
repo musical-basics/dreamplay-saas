@@ -1,6 +1,7 @@
 import { db } from "@repo/database";
 import { notFound } from "next/navigation";
 import mustache from "mustache";
+import { Navbar } from "../../components/Navbar";
 
 export const dynamic = "force-dynamic";
 
@@ -98,9 +99,15 @@ export default async function Page({ params, searchParams }: PageProps) {
     const renderedHtml = mustache.render(template.body, data);
 
     return (
-        <main
-            dangerouslySetInnerHTML={{ __html: renderedHtml }}
-            className="min-h-screen"
-        />
+        <>
+            {/* Dynamic Navbar with configuration-specific links */}
+            <Navbar links={configuration?.navLinks || []} />
+
+            {/* Render the Page Content */}
+            <main
+                dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                className="min-h-screen"
+            />
+        </>
     );
 }
