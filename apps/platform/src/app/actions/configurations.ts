@@ -32,17 +32,28 @@ export async function createConfiguration(formData: FormData) {
 }
 
 export async function getConfigurationById(id: string) {
-    return db.configuration.findUnique({
+    const config = await db.configuration.findUnique({
         where: { id },
         include: {
             templates: {
-                orderBy: { updatedAt: "desc" },
+                include: {
+                    template: true,
+                },
+                orderBy: { createdAt: "desc" },
             },
             navLinks: {
                 orderBy: { order: "asc" },
             },
         },
     });
+
+    if (!config) return null;
+
+    // Transform to flatten the junction table
+    return {
+        ...config,
+        templates: config.templates.map((ct: any) => ct.template),
+    };
 }
 
 export async function updateConfiguration(id: string, data: { name?: string; slug?: string; isDefault?: boolean }) {
@@ -64,13 +75,12 @@ export async function updateConfiguration(id: string, data: { name?: string; slu
 }
 
 export async function deleteConfiguration(id: string) {
-    // First, unassign all templates (set configurationId to null)
-    await db.contentTemplate.updateMany({
+    // Delete all junction records first (cascade should handle this, but be explicit)
+    await (db as any).configurationTemplate.deleteMany({
         where: { configurationId: id },
-        data: { configurationId: null },
     });
 
-    // Delete nav links (cascade should handle this, but be explicit)
+    // Delete nav links
     await db.navLink.deleteMany({
         where: { configurationId: id },
     });
@@ -115,24 +125,38 @@ export async function deleteNavLink(id: string, configurationId: string) {
 }
 
 export async function getAvailableTemplates(excludeConfigurationId: string) {
-    // Get all LANDING and CHECKOUT templates that are NOT in this configuration
-    return db.contentTemplate.findMany({
+    // Get all LANDING and CHECKOUT templates that are NOT already in this configuration
+    const allTemplates = await db.contentTemplate.findMany({
         where: {
             type: { in: ["LANDING", "CHECKOUT"] },
-            OR: [
-                { configurationId: null },
-                { configurationId: { not: excludeConfigurationId } },
-            ],
+        },
+        include: {
+            configurations: {
+                where: { configurationId: excludeConfigurationId },
+            },
         },
         orderBy: { name: "asc" },
     });
+
+    // Filter to only templates not in this configuration
+    return allTemplates.filter((t: any) => t.configurations.length === 0);
 }
 
 export async function assignTemplateToConfiguration(templateId: string, configurationId: string) {
-    await db.contentTemplate.update({
-        where: { id: templateId },
-        data: { configurationId } as any,
-    });
+    // Create junction record (idempotent - will fail silently if already exists due to unique constraint)
+    try {
+        await (db as any).configurationTemplate.create({
+            data: {
+                templateId,
+                configurationId,
+            },
+        });
+    } catch (e: any) {
+        // Ignore unique constraint violation
+        if (!e.code || e.code !== "P2002") {
+            throw e;
+        }
+    }
 
     revalidatePath(`/sites/${configurationId}`);
     revalidatePath("/sites");
@@ -140,14 +164,12 @@ export async function assignTemplateToConfiguration(templateId: string, configur
 }
 
 export async function removeTemplateFromConfiguration(templateId: string, configurationId: string) {
-    // Find the default configuration to reassign to
-    const defaultConfig = await db.configuration.findFirst({
-        where: { isDefault: true },
-    });
-
-    await db.contentTemplate.update({
-        where: { id: templateId },
-        data: { configurationId: defaultConfig?.id || null } as any,
+    // Delete the junction record
+    await (db as any).configurationTemplate.deleteMany({
+        where: {
+            templateId,
+            configurationId,
+        },
     });
 
     revalidatePath(`/sites/${configurationId}`);

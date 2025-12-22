@@ -10,7 +10,7 @@ export async function createTemplate(formData: FormData) {
     const type = formData.get("type") as "EMAIL" | "LANDING" | "CHECKOUT";
     const body = formData.get("body") as string;
     const previewDataStr = formData.get("previewData") as string;
-    const configurationIdFromForm = formData.get("configurationId") as string | null;
+    const configurationId = formData.get("configurationId") as string | null;
 
     let previewData = {};
     if (previewDataStr) {
@@ -21,32 +21,44 @@ export async function createTemplate(formData: FormData) {
         }
     }
 
-    // For LANDING/CHECKOUT templates, assign to default configuration if not specified
-    let configurationId: string | null = configurationIdFromForm || null;
-    if ((type === "LANDING" || type === "CHECKOUT") && !configurationId) {
-        const defaultConfig = await db.configuration.findFirst({
-            where: { isDefault: true },
-        });
-        configurationId = defaultConfig?.id || null;
-    }
-
     try {
-        await db.contentTemplate.create({
+        // Create the template
+        const template = await db.contentTemplate.create({
             data: {
                 name,
                 slug,
                 type,
                 body,
                 previewData,
-                configurationId,
             } as any,
         });
+
+        // If configurationId provided, link it to that site
+        // Otherwise, link to default site for LANDING/CHECKOUT templates
+        if (type === "LANDING" || type === "CHECKOUT") {
+            let targetConfigId = configurationId;
+            if (!targetConfigId) {
+                const defaultConfig = await db.configuration.findFirst({
+                    where: { isDefault: true },
+                });
+                targetConfigId = defaultConfig?.id || null;
+            }
+
+            if (targetConfigId) {
+                await (db as any).configurationTemplate.create({
+                    data: {
+                        templateId: template.id,
+                        configurationId: targetConfigId,
+                    },
+                });
+            }
+        }
 
         revalidatePath("/templates");
         revalidatePath("/sites");
     } catch (error) {
         console.error("FATAL: Failed to create template:", error);
-        throw error; // Re-throw so UI shows error
+        throw error;
     }
     redirect("/templates");
 }
@@ -81,7 +93,12 @@ export async function createTemplateFromJson(data: { name: string; slug: string;
 }
 
 export async function deleteTemplate(id: string) {
-    // First, remove template from any journey steps
+    // First, remove template from any junction records
+    await (db as any).configurationTemplate.deleteMany({
+        where: { templateId: id },
+    });
+
+    // Remove from any journey steps
     await db.journeyStep.deleteMany({
         where: { templateId: id },
     });
@@ -93,12 +110,16 @@ export async function deleteTemplate(id: string) {
 
     revalidatePath("/templates");
     revalidatePath("/emails");
+    revalidatePath("/sites");
 }
 
 export async function duplicateTemplate(id: string) {
-    // Get the original template
+    // Get the original template with its configurations
     const original = await db.contentTemplate.findUnique({
         where: { id },
+        include: {
+            configurations: true,
+        },
     });
 
     if (!original) {
@@ -113,10 +134,7 @@ export async function duplicateTemplate(id: string) {
     // Check if slug exists and increment until unique
     while (true) {
         const existing = await db.contentTemplate.findFirst({
-            where: {
-                slug: newSlug,
-                configurationId: original.configurationId,
-            },
+            where: { slug: newSlug },
         });
         if (!existing) break;
         newSlug = `${baseSlug}-${counter}`;
@@ -124,17 +142,27 @@ export async function duplicateTemplate(id: string) {
     }
 
     // Create the duplicate
-    await db.contentTemplate.create({
+    const newTemplate = await db.contentTemplate.create({
         data: {
             name: `${original.name} (Copy)`,
             slug: newSlug,
             type: original.type,
             body: original.body,
             previewData: original.previewData || undefined,
-            configurationId: original.configurationId,
         } as any,
     });
 
+    // Copy junction records to link to same configurations
+    for (const config of (original as any).configurations) {
+        await (db as any).configurationTemplate.create({
+            data: {
+                templateId: newTemplate.id,
+                configurationId: config.configurationId,
+            },
+        });
+    }
+
     revalidatePath("/templates");
     revalidatePath("/emails");
+    revalidatePath("/sites");
 }

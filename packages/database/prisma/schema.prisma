@@ -20,7 +20,7 @@ model Customer {
 
 model ContentTemplate {
   id       String        @id @default(uuid())
-  slug     String        // Removed @unique - now compound with configurationId
+  slug     String        @unique // Templates have unique slugs globally
   name     String
   type     ContentType
   body     String
@@ -28,15 +28,12 @@ model ContentTemplate {
   updatedAt DateTime      @updatedAt
   previewData Json?
   
-  // Configuration relation (nullable for EMAIL templates)
-  configurationId String?
-  configuration   Configuration? @relation(fields: [configurationId], references: [id])
+  // Many-to-many relation with Configuration via junction table
+  configurations ConfigurationTemplate[]
   
   steps    JourneyStep[]
   campaigns Campaign[]
   analyticsEvents AnalyticsEvent[]
-  
-  @@unique([slug, configurationId])
 }
 
 model Configuration {
@@ -46,8 +43,21 @@ model Configuration {
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   
-  templates ContentTemplate[]
+  // Many-to-many relation with ContentTemplate via junction table
+  templates ConfigurationTemplate[]
   navLinks  NavLink[]
+}
+
+// Junction table for many-to-many template-configuration relationship
+model ConfigurationTemplate {
+  id              String        @id @default(uuid())
+  configurationId String
+  configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  templateId      String
+  template        ContentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  
+  @@unique([configurationId, templateId])
 }
 
 model NavLink {

@@ -15,7 +15,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     const slugArray = params.slug || [];
 
     // 1. Determine Configuration and Page Slug
-    let configuration = null;
+    let configuration: any = null;
     let pageSlug = "home";
 
     if (slugArray.length > 0) {
@@ -43,26 +43,47 @@ export default async function Page({ params, searchParams }: PageProps) {
         });
     }
 
-    // 3. Fetch Template (scoped to configuration)
-    const template = await db.contentTemplate.findFirst({
-        where: {
-            slug: pageSlug,
-            configurationId: configuration?.id || null,
-        },
-    });
+    // 3. Fetch Template (via junction table - template must be linked to this configuration)
+    let template = null;
+
+    if (configuration) {
+        // Look for template linked to this configuration via junction table
+        const junction = await (db as any).configurationTemplate.findFirst({
+            where: {
+                configurationId: configuration.id,
+                template: {
+                    slug: pageSlug,
+                },
+            },
+            include: {
+                template: true,
+            },
+        });
+        template = junction?.template || null;
+    }
+
+    // 4. If not found in junction, try finding template by slug directly (fallback for EMAIL templates)
+    if (!template) {
+        template = await db.contentTemplate.findFirst({
+            where: {
+                slug: pageSlug,
+                type: { in: ["LANDING", "CHECKOUT"] },
+            },
+        });
+    }
 
     if (!template) {
         notFound();
     }
 
-    // 4. Context Merging
+    // 5. Context Merging
     let data: any = {
         ...searchParams,
         nav_links: configuration?.navLinks || [],
         site_name: configuration?.name || "Default Site",
     };
 
-    // 5. Customer Lookup
+    // 6. Customer Lookup
     const customerId = searchParams.customerId as string;
     if (customerId) {
         const customer = await db.customer.findUnique({
@@ -73,7 +94,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         }
     }
 
-    // 6. Render with Mustache
+    // 7. Render with Mustache
     const renderedHtml = mustache.render(template.body, data);
 
     return (

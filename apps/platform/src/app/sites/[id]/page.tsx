@@ -56,7 +56,7 @@ export default async function SiteDetailPage({ params }: PageProps) {
                             </form>
                         )}
                         <a
-                            href={`/${site.slug}`}
+                            href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://dreamplay-saas-web.vercel.app'}/${site.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600"
