@@ -1,56 +1,131 @@
-import Link from "next/link";
+"use client";
 
-// Define the shape of a Link
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+
+// 1. Type Definitions
 interface NavLink {
+    id?: string;
     label: string;
     url: string;
 }
 
-// Add Props to the Component
 interface NavbarProps {
     links?: NavLink[];
 }
 
-export function Navbar({ links = [] }: NavbarProps) {
-    return (
-        <nav className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                {/* Logo Area */}
-                <div className="flex items-center">
-                    <Link href="/" className="text-xl font-bold text-slate-900">
-                        DREAMPLAY
-                    </Link>
-                </div>
+export default function Navbar({ links = [] }: NavbarProps) {
+    const pathname = usePathname();
+    const [isScrolled, setIsScrolled] = useState(false);
 
-                {/* Dynamic Desktop Navigation */}
-                <div className="hidden md:block">
-                    <div className="flex items-center gap-8">
+    // 2. Scroll Event Listener
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 80) {
+                setIsScrolled(true);
+            } else {
+                setIsScrolled(false);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // 3. Helper for Active States
+    const getLinkClass = (path: string) => {
+        const baseClass = "navigation5_link-wrfrm w-nav-link";
+        return pathname === path ? `${baseClass} w--current` : baseClass;
+    };
+
+    return (
+        <div
+            data-animation="default"
+            className="section_navigation5-wrfrm w-nav"
+            data-wf--navbar--variant="base"
+            data-duration="400"
+            role="banner"
+        >
+            <div className="navigation5_container">
+
+                {/* --- BRAND / LOGO AREA --- */}
+                <Link
+                    href="/"
+                    aria-current="page"
+                    className={`navigation5_logo-link w-nav-brand ${isScrolled ? "scrolled" : ""}`}
+                >
+                    {/* BIG LOGO (Visible at Top) */}
+                    <img
+                        loading="lazy"
+                        src="/images/Logo.svg"
+                        alt="DreamPlay Logo"
+                        className="navigation_logo transition-all duration-300 ease-in-out"
+                        style={{
+                            opacity: isScrolled ? 0 : 1,
+                            display: isScrolled ? 'none' : 'block'
+                        }}
+                    />
+
+                    {/* ICON PILL (Visible when Scrolled) */}
+                    <div
+                        className="logo-icon-pill transition-all duration-300 ease-in-out"
+                        style={{
+                            display: isScrolled ? 'flex' : 'none',
+                            opacity: isScrolled ? 1 : 0,
+                            transform: isScrolled ? 'translateY(0)' : 'translateY(10px)'
+                        }}
+                    >
+                        <img src="/images/Logo-Icon.svg" alt="Icon" className="h-8" />
+                        <span className="ml-2 font-bold text-slate-900">DreamPlay</span>
+                    </div>
+                </Link>
+
+                {/* --- DYNAMIC MENU LINKS --- */}
+                <nav role="navigation" className="navigation5_menu-wrfrm is-page-height-tablet w-nav-menu">
+                    <div className="navigation5_menu-links">
+
+                        {/* Dynamic Loop from Database */}
                         {links.length > 0 ? (
                             links.map((link, index) => (
-                                <Link
-                                    key={index}
-                                    href={link.url}
-                                    className="text-sm font-medium text-slate-600 hover:text-slate-900"
-                                >
-                                    {link.label}
-                                </Link>
+                                <React.Fragment key={link.id || index}>
+                                    <Link
+                                        href={link.url}
+                                        className={getLinkClass(link.url)}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                    {/* Add Divider except for last item */}
+                                    {index < links.length - 1 && (
+                                        <div className="nav-divider"></div>
+                                    )}
+                                </React.Fragment>
                             ))
-                        ) : null}
+                        ) : (
+                            <span className="text-sm text-slate-400 p-4">No links configured</span>
+                        )}
+
+                    </div>
+                    {/* Removed Hardcoded Mobile Button Here */}
+                </nav>
+
+                {/* --- HAMBURGER MENU (Mobile) --- */}
+                <div className="navigation5_buttons-wrfrm">
+                    {/* Removed Hardcoded Desktop Button Here */}
+
+                    {/* Mobile Hamburger Icon */}
+                    <div className="navigation5_menu-button w-nav-button">
+                        <div className="navigation5_menu-icon">
+                            <div className="navigation_menu_line-top navigation-menu-line-background-wrfrm"></div>
+                            <div className="navigation_menu_line-middle navigation-menu-line-background-wrfrm">
+                                <div className="navigation_menu_line-middle-inner"></div>
+                            </div>
+                            <div className="navigation_menu_line-bottom navigation-menu-line-background-wrfrm"></div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Mobile Menu Button */}
-                <div className="md:hidden">
-                    <button className="p-2 text-slate-600">
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
             </div>
-        </nav>
+        </div>
     );
 }
-
-// Keep default export for backward compatibility
-export default Navbar;

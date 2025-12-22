@@ -1,7 +1,7 @@
 import { db } from "@repo/database";
 import { notFound } from "next/navigation";
 import mustache from "mustache";
-import { Navbar } from "../../components/Navbar";
+import Navbar from "../../components/Navbar";
 
 export const dynamic = "force-dynamic";
 
