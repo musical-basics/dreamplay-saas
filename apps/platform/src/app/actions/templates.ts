@@ -10,6 +10,7 @@ export async function createTemplate(formData: FormData) {
     const type = formData.get("type") as "EMAIL" | "LANDING" | "CHECKOUT";
     const body = formData.get("body") as string;
     const previewDataStr = formData.get("previewData") as string;
+    const configurationIdFromForm = formData.get("configurationId") as string | null;
 
     let previewData = {};
     if (previewDataStr) {
@@ -20,6 +21,15 @@ export async function createTemplate(formData: FormData) {
         }
     }
 
+    // For LANDING/CHECKOUT templates, assign to default configuration if not specified
+    let configurationId: string | null = configurationIdFromForm || null;
+    if ((type === "LANDING" || type === "CHECKOUT") && !configurationId) {
+        const defaultConfig = await db.configuration.findFirst({
+            where: { isDefault: true },
+        });
+        configurationId = defaultConfig?.id || null;
+    }
+
     try {
         await db.contentTemplate.create({
             data: {
@@ -28,10 +38,12 @@ export async function createTemplate(formData: FormData) {
                 type,
                 body,
                 previewData,
+                configurationId,
             } as any,
         });
 
         revalidatePath("/templates");
+        revalidatePath("/sites");
     } catch (error) {
         console.error("FATAL: Failed to create template:", error);
         throw error; // Re-throw so UI shows error
