@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { db } from "@repo/database";
-import { Plus, Edit, ExternalLink, Copy, Trash2 } from "lucide-react";
+import { Plus, Edit, ExternalLink, Copy } from "lucide-react";
 import { deleteTemplate, duplicateTemplate } from "../actions/templates";
+import { DeleteTemplateButton } from "../../components/DeleteTemplateButton";
 
 export const dynamic = "force-dynamic";
 
@@ -78,20 +79,10 @@ export default async function TemplatesPage() {
                                                 <Copy className="h-4 w-4" />
                                             </button>
                                         </form>
-                                        <form action={deleteTemplate.bind(null, template.id)}>
-                                            <button
-                                                type="submit"
-                                                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                                                title="Delete Template"
-                                                onClick={(e) => {
-                                                    if (!confirm(`Delete "${template.name}"? This cannot be undone.`)) {
-                                                        e.preventDefault();
-                                                    }
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </form>
+                                        <DeleteTemplateButton
+                                            templateName={template.name}
+                                            deleteAction={deleteTemplate.bind(null, template.id)}
+                                        />
                                     </div>
                                 </td>
                             </tr>
