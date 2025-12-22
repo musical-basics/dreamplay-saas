@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@repo/database";
-import { Plus, Edit, ExternalLink } from "lucide-react";
+import { Plus, Edit, ExternalLink, Copy, Trash2 } from "lucide-react";
+import { deleteTemplate, duplicateTemplate } from "../actions/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -49,13 +50,13 @@ export default async function TemplatesPage() {
                                     </span>
                                 </td>
                                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                                    <div className="flex items-center justify-end gap-3">
+                                    <div className="flex items-center justify-end gap-2">
                                         {template.type !== "EMAIL" && (
                                             <a
                                                 href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${template.slug}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-1 text-slate-500 hover:text-slate-700"
+                                                className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                                                 title="View Template"
                                             >
                                                 <ExternalLink className="h-4 w-4" />
@@ -63,11 +64,34 @@ export default async function TemplatesPage() {
                                         )}
                                         <Link
                                             href={`/templates/${template.id}`}
-                                            className="text-blue-600 hover:text-blue-900"
+                                            className="rounded p-1 text-blue-600 hover:bg-blue-50 hover:text-blue-900"
                                             title="Edit Template"
                                         >
                                             <Edit className="h-4 w-4" />
                                         </Link>
+                                        <form action={duplicateTemplate.bind(null, template.id)}>
+                                            <button
+                                                type="submit"
+                                                className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                                title="Duplicate Template"
+                                            >
+                                                <Copy className="h-4 w-4" />
+                                            </button>
+                                        </form>
+                                        <form action={deleteTemplate.bind(null, template.id)}>
+                                            <button
+                                                type="submit"
+                                                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                                                title="Delete Template"
+                                                onClick={(e) => {
+                                                    if (!confirm(`Delete "${template.name}"? This cannot be undone.`)) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -88,3 +112,4 @@ export default async function TemplatesPage() {
         </div>
     );
 }
+

@@ -67,3 +67,62 @@ export async function createTemplateFromJson(data: { name: string; slug: string;
     revalidatePath("/templates");
     return newTemplate;
 }
+
+export async function deleteTemplate(id: string) {
+    // First, remove template from any journey steps
+    await db.journeyStep.deleteMany({
+        where: { templateId: id },
+    });
+
+    // Delete the template
+    await db.contentTemplate.delete({
+        where: { id },
+    });
+
+    revalidatePath("/templates");
+    revalidatePath("/emails");
+}
+
+export async function duplicateTemplate(id: string) {
+    // Get the original template
+    const original = await db.contentTemplate.findUnique({
+        where: { id },
+    });
+
+    if (!original) {
+        throw new Error("Template not found");
+    }
+
+    // Generate a unique slug
+    const baseSlug = `${original.slug}-copy`;
+    let newSlug = baseSlug;
+    let counter = 1;
+
+    // Check if slug exists and increment until unique
+    while (true) {
+        const existing = await db.contentTemplate.findFirst({
+            where: {
+                slug: newSlug,
+                configurationId: original.configurationId,
+            },
+        });
+        if (!existing) break;
+        newSlug = `${baseSlug}-${counter}`;
+        counter++;
+    }
+
+    // Create the duplicate
+    await db.contentTemplate.create({
+        data: {
+            name: `${original.name} (Copy)`,
+            slug: newSlug,
+            type: original.type,
+            body: original.body,
+            previewData: original.previewData || undefined,
+            configurationId: original.configurationId,
+        } as any,
+    });
+
+    revalidatePath("/templates");
+    revalidatePath("/emails");
+}
