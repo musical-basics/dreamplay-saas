@@ -20,16 +20,43 @@ model Customer {
 
 model ContentTemplate {
   id       String        @id @default(uuid())
-  slug     String        @unique
+  slug     String        // Removed @unique - now compound with configurationId
   name     String
   type     ContentType
   body     String
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   previewData Json?
+  
+  // Configuration relation (nullable for EMAIL templates)
+  configurationId String?
+  configuration   Configuration? @relation(fields: [configurationId], references: [id])
+  
   steps    JourneyStep[]
   campaigns Campaign[]
   analyticsEvents AnalyticsEvent[]
+  
+  @@unique([slug, configurationId])
+}
+
+model Configuration {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Default Site", "Summer Sale"
+  slug      String   @unique // URL prefix: "main", "summer-25"
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  templates ContentTemplate[]
+  navLinks  NavLink[]
+}
+
+model NavLink {
+  id              String        @id @default(uuid())
+  label           String
+  url             String
+  order           Int
+  configurationId String
+  configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
 }
 
 enum ContentType {

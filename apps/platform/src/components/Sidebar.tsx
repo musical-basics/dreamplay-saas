@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, FileText, Map, BarChart2, Settings, Send } from "lucide-react";
+import { Users, Mail, Globe, Map, BarChart2, Settings, Send } from "lucide-react";
 import clsx from "clsx";
 
 const navigation = [
     { name: "Customers", href: "/customers", icon: Users },
-    { name: "Templates", href: "/templates", icon: FileText },
+    { name: "Emails", href: "/emails", icon: Mail },
+    { name: "Sites", href: "/sites", icon: Globe },
     { name: "Journeys", href: "/journeys", icon: Map },
     { name: "Campaigns", href: "/campaigns", icon: Send },
     { name: "Analytics", href: "/analytics", icon: BarChart2 },
