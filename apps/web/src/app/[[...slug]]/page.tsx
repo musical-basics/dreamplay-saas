@@ -29,6 +29,7 @@ export default async function Page({ params, searchParams }: PageProps) {
 
         if (configuration) {
             // First segment was a config - rest is the page slug
+            // If slice is empty, join returns "", so we default to "home"
             pageSlug = slugArray.slice(1).join("/") || "home";
         } else {
             // Not a config - use full path as page slug
@@ -63,7 +64,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         template = junction?.template || null;
     }
 
-    // 4. If not found in junction, try finding template by slug directly (fallback for EMAIL templates)
+    // 4. If not found in junction, try finding template by slug directly (fallback)
     if (!template) {
         template = await db.contentTemplate.findFirst({
             where: {
@@ -98,15 +99,24 @@ export default async function Page({ params, searchParams }: PageProps) {
     // 7. Render with Mustache
     const renderedHtml = mustache.render(template.body, data);
 
+    // --- FIX: Smart Padding Logic ---
+    // Define pages that are designed to have the navbar float OVER them (Transparent)
+    // Add any other "Hero" style pages to this list.
+    const transparentHeaderPages = ["customize", "home", "home-new", "reserve"];
+    const isTransparent = transparentHeaderPages.includes(pageSlug);
+
     return (
         <>
             {/* Dynamic Navbar with configuration-specific links */}
             <Navbar links={configuration?.navLinks || []} />
 
             {/* Render the Page Content */}
+            {/* If Transparent: pt-0 (Navbar floats over content)
+                If Standard: pt-24 (Push content down so Navbar doesn't hide it)
+            */}
             <main
                 dangerouslySetInnerHTML={{ __html: renderedHtml }}
-                className="min-h-screen"
+                className={`min-h-screen ${isTransparent ? "pt-0" : "pt-24"}`}
             />
         </>
     );
