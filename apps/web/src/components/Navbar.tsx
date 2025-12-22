@@ -87,31 +87,46 @@ export default function Navbar({ links = [] }: NavbarProps) {
 
                         {/* Dynamic Loop from Database */}
                         {links.length > 0 ? (
-                            links.map((link, index) => (
-                                <React.Fragment key={link.id || index}>
-                                    <Link
-                                        href={link.url}
-                                        className={getLinkClass(link.url)}
-                                    >
-                                        {link.label}
-                                    </Link>
-                                    {/* Add Divider except for last item */}
-                                    {index < links.length - 1 && (
-                                        <div className="nav-divider"></div>
-                                    )}
-                                </React.Fragment>
-                            ))
+                            links.map((link, index) => {
+                                // LOGIC: Force hard refresh for script-heavy pages like /customize
+                                const isHardRefresh = link.url.includes('/customize');
+
+                                return (
+                                    <React.Fragment key={link.id || index}>
+                                        {isHardRefresh ? (
+                                            /* OPTION A: Hard Refresh (<a> tag) */
+                                            <a
+                                                href={link.url}
+                                                className={getLinkClass(link.url)}
+                                            >
+                                                {link.label}
+                                            </a>
+                                        ) : (
+                                            /* OPTION B: Fast Client Nav (<Link> tag) */
+                                            <Link
+                                                href={link.url}
+                                                className={getLinkClass(link.url)}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        )}
+
+                                        {/* Add Divider except for last item */}
+                                        {index < links.length - 1 && (
+                                            <div className="nav-divider"></div>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })
                         ) : (
                             <span className="text-sm text-slate-400 p-4">No links configured</span>
                         )}
 
                     </div>
-                    {/* Removed Hardcoded Mobile Button Here */}
                 </nav>
 
                 {/* --- HAMBURGER MENU (Mobile) --- */}
                 <div className="navigation5_buttons-wrfrm">
-                    {/* Removed Hardcoded Desktop Button Here */}
 
                     {/* Mobile Hamburger Icon */}
                     <div className="navigation5_menu-button w-nav-button">
