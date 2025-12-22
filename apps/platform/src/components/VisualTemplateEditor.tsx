@@ -25,6 +25,7 @@ interface VisualTemplateEditorProps {
         type: "EMAIL" | "LANDING" | "CHECKOUT";
         body: string;
         previewData?: unknown;
+        transparentHeader?: boolean;
     } | null;
 }
 
@@ -61,6 +62,7 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
         initialData?.type || "EMAIL"
     );
     const [body, setBody] = useState(initialData?.body || "<!DOCTYPE html>\n<html>\n<body>\n  <h1>Hello {{name}}!</h1>\n</body>\n</html>");
+    const [transparentHeader, setTransparentHeader] = useState(initialData?.transparentHeader || false);
 
     // UI state
     const [isSaving, setIsSaving] = useState(false);
@@ -141,7 +143,8 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                     slug,
                     name,
                     type,
-                    previewData: variableValues
+                    previewData: variableValues,
+                    transparentHeader
                 });
             }
         } catch (error) {
@@ -326,6 +329,23 @@ export function VisualTemplateEditor({ initialData }: VisualTemplateEditorProps)
                                 <option value="CHECKOUT">Checkout</option>
                             </select>
                         </div>
+                        {/* Transparent Header Toggle - only for LANDING/CHECKOUT */}
+                        {(type === "LANDING" || type === "CHECKOUT") && (
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs text-slate-500">Transparent Header</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setTransparentHeader(!transparentHeader)}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${transparentHeader ? 'bg-emerald-600' : 'bg-slate-600'
+                                        }`}
+                                >
+                                    <span
+                                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${transparentHeader ? 'translate-x-5' : 'translate-x-1'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 

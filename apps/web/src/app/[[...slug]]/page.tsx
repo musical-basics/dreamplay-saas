@@ -46,7 +46,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     }
 
     // 3. Fetch Template (via junction table - template must be linked to this configuration)
-    let template = null;
+    let template: any = null;
 
     if (configuration) {
         // Look for template linked to this configuration via junction table
@@ -99,24 +99,22 @@ export default async function Page({ params, searchParams }: PageProps) {
     // 7. Render with Mustache
     const renderedHtml = mustache.render(template.body, data);
 
-    // --- FIX: Smart Padding Logic ---
-    // Define pages that are designed to have the navbar float OVER them (Transparent)
-    // Add any other "Hero" style pages to this list.
-    const transparentHeaderPages = ["customize", "home", "home-new", "reserve"];
-    const isTransparent = transparentHeaderPages.includes(pageSlug);
+    // --- NEW LOGIC: Dynamic Padding via Database Field ---
+    // Trust the database setting. If undefined/null, default to FALSE (add padding).
+    const isTransparent = template.transparentHeader === true;
 
     return (
         <>
-            {/* Dynamic Navbar with configuration-specific links */}
+            {/* Dynamic Navbar */}
             <Navbar links={configuration?.navLinks || []} />
 
             {/* Render the Page Content */}
-            {/* If Transparent: pt-0 (Navbar floats over content)
-                If Standard: pt-24 (Push content down so Navbar doesn't hide it)
+            {/* If isTransparent (True): pt-0. Navbar floats over content.
+               If isTransparent (False): pt-32. Pushes content down ~128px to clear Navbar.
             */}
             <main
                 dangerouslySetInnerHTML={{ __html: renderedHtml }}
-                className={`min-h-screen ${isTransparent ? "pt-0" : "pt-24"}`}
+                className={`min-h-screen ${isTransparent ? "pt-0" : "pt-32"}`}
             />
         </>
     );

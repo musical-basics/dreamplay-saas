@@ -63,7 +63,7 @@ export async function createTemplate(formData: FormData) {
     redirect("/templates");
 }
 
-export async function updateTemplate(id: string, data: { body?: string; slug?: string; name?: string; type?: "EMAIL" | "LANDING" | "CHECKOUT"; previewData?: any }) {
+export async function updateTemplate(id: string, data: { body?: string; slug?: string; name?: string; type?: "EMAIL" | "LANDING" | "CHECKOUT"; previewData?: any; transparentHeader?: boolean }) {
     try {
         console.log("Updating template with data:", JSON.stringify(data, null, 2));
         await db.contentTemplate.update({

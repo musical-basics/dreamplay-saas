@@ -27,6 +27,7 @@ model ContentTemplate {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   previewData Json?
+  transparentHeader Boolean @default(false) // Hero pages with floating navbar
   
   // Many-to-many relation with Configuration via junction table
   configurations ConfigurationTemplate[]
