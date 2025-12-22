@@ -113,3 +113,44 @@ export async function deleteNavLink(id: string, configurationId: string) {
 
     revalidatePath(`/sites/${configurationId}`);
 }
+
+export async function getAvailableTemplates(excludeConfigurationId: string) {
+    // Get all LANDING and CHECKOUT templates that are NOT in this configuration
+    return db.contentTemplate.findMany({
+        where: {
+            type: { in: ["LANDING", "CHECKOUT"] },
+            OR: [
+                { configurationId: null },
+                { configurationId: { not: excludeConfigurationId } },
+            ],
+        },
+        orderBy: { name: "asc" },
+    });
+}
+
+export async function assignTemplateToConfiguration(templateId: string, configurationId: string) {
+    await db.contentTemplate.update({
+        where: { id: templateId },
+        data: { configurationId } as any,
+    });
+
+    revalidatePath(`/sites/${configurationId}`);
+    revalidatePath("/sites");
+    revalidatePath("/templates");
+}
+
+export async function removeTemplateFromConfiguration(templateId: string, configurationId: string) {
+    // Find the default configuration to reassign to
+    const defaultConfig = await db.configuration.findFirst({
+        where: { isDefault: true },
+    });
+
+    await db.contentTemplate.update({
+        where: { id: templateId },
+        data: { configurationId: defaultConfig?.id || null } as any,
+    });
+
+    revalidatePath(`/sites/${configurationId}`);
+    revalidatePath("/sites");
+    revalidatePath("/templates");
+}

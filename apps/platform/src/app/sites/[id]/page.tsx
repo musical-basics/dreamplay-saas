@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus, Edit, Trash2, Star, ExternalLink, FileText, Menu } from "lucide-react";
-import { getConfigurationById, updateConfiguration, createNavLink, deleteNavLink } from "../../actions/configurations";
+import { ArrowLeft, Star, ExternalLink, Menu, Trash2 } from "lucide-react";
+import { getConfigurationById, updateConfiguration, createNavLink, deleteNavLink, getAvailableTemplates } from "../../actions/configurations";
+import { SiteTemplatesManager } from "../../../components/SiteTemplatesManager";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ interface PageProps {
 
 export default async function SiteDetailPage({ params }: PageProps) {
     const site = await getConfigurationById(params.id);
+    const availableTemplates = await getAvailableTemplates(params.id);
 
     if (!site) {
         notFound();
@@ -67,45 +69,23 @@ export default async function SiteDetailPage({ params }: PageProps) {
             </div>
 
             <div className="grid gap-8 lg:grid-cols-2">
-                {/* Templates Section */}
-                <div>
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 className="flex items-center gap-2 text-lg font-medium text-white">
-                            <FileText className="h-5 w-5 text-blue-400" />
-                            Templates ({site.templates.length})
-                        </h2>
-                        <Link
-                            href={`/templates/new?configurationId=${site.id}&type=LANDING`}
-                            className="flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Add Template
-                        </Link>
-                    </div>
-                    <div className="space-y-2">
-                        {site.templates.length === 0 ? (
-                            <p className="rounded-lg border border-slate-700 bg-slate-800/50 p-8 text-center text-slate-400">
-                                No templates yet
-                            </p>
-                        ) : (
-                            site.templates.map((template) => (
-                                <Link
-                                    key={template.id}
-                                    href={`/templates/${template.id}`}
-                                    className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 p-3 transition-colors hover:border-slate-600"
-                                >
-                                    <div>
-                                        <span className="font-medium text-white">{template.name}</span>
-                                        <span className="ml-2 text-sm text-slate-400">/{template.slug}</span>
-                                    </div>
-                                    <span className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
-                                        {template.type}
-                                    </span>
-                                </Link>
-                            ))
-                        )}
-                    </div>
-                </div>
+                {/* Templates Section - Client Component */}
+                <SiteTemplatesManager
+                    siteId={site.id}
+                    siteName={site.name}
+                    siteTemplates={site.templates.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        slug: t.slug,
+                        type: t.type,
+                    }))}
+                    availableTemplates={availableTemplates.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        slug: t.slug,
+                        type: t.type,
+                    }))}
+                />
 
                 {/* Navigation Links Section */}
                 <div>
