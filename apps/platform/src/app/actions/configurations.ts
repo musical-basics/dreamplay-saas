@@ -126,6 +126,15 @@ export async function deleteNavLink(id: string, configurationId: string) {
     revalidatePath(`/sites/${configurationId}`);
 }
 
+export async function updateNavLink(id: string, configurationId: string, data: { forceRefresh?: boolean }) {
+    await db.navLink.update({
+        where: { id },
+        data,
+    });
+
+    revalidatePath(`/sites/${configurationId}`);
+}
+
 export async function getAvailableTemplates(excludeConfigurationId: string) {
     // Get all LANDING and CHECKOUT templates that are NOT already in this configuration
     const allTemplates = await db.contentTemplate.findMany({

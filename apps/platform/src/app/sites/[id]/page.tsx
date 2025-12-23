@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Star, ExternalLink, Menu, Trash2 } from "lucide-react";
-import { getConfigurationById, updateConfiguration, createNavLink, deleteNavLink, getAvailableTemplates } from "../../actions/configurations";
+import { ArrowLeft, Star, ExternalLink, Menu } from "lucide-react";
+import { getConfigurationById, updateConfiguration, createNavLink, getAvailableTemplates } from "../../actions/configurations";
 import { SiteTemplatesManager } from "../../../components/SiteTemplatesManager";
+import { NavLinkRow } from "../../../components/NavLinkRow";
 
 export const dynamic = "force-dynamic";
 
@@ -135,31 +136,16 @@ export default async function SiteDetailPage({ params }: PageProps) {
                             </p>
                         ) : (
                             site.navLinks.map((link: any) => (
-                                <div
+                                <NavLinkRow
                                     key={link.id}
-                                    className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 p-3"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium text-white">{link.label}</span>
-                                        <span className="text-sm text-slate-400">{link.url}</span>
-                                        {link.forceRefresh && (
-                                            <span className="rounded bg-orange-600/20 px-1.5 py-0.5 text-xs text-orange-400">
-                                                Hard Refresh
-                                            </span>
-                                        )}
-                                    </div>
-                                    <form action={async () => {
-                                        "use server";
-                                        await deleteNavLink(link.id, site.id);
-                                    }}>
-                                        <button
-                                            type="submit"
-                                            className="rounded p-1 text-slate-400 hover:bg-red-600/20 hover:text-red-400"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </form>
-                                </div>
+                                    link={{
+                                        id: link.id,
+                                        label: link.label,
+                                        url: link.url,
+                                        forceRefresh: link.forceRefresh || false,
+                                    }}
+                                    siteId={site.id}
+                                />
                             ))
                         )}
                     </div>
