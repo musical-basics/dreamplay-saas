@@ -1,5 +1,5 @@
 import { db } from "@repo/database";
-import { VisualTemplateEditor } from "../../../components/VisualTemplateEditor";
+import { VisualTemplateEditorSafe } from "../../../components/VisualTemplateEditorSafe";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +22,6 @@ export default async function TemplatePage({
         }
     }
 
-    return <VisualTemplateEditor initialData={template} />;
+    return <VisualTemplateEditorSafe initialData={template} />;
 }
 
