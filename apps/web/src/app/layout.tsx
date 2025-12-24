@@ -21,20 +21,26 @@ export default function RootLayout({
     return (
         <html lang="en">
             <head>
+                {/* --- VIEWPORT META (Mobile scaling fix) --- */}
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+                {/* --- TAILWIND CSS CDN (Global - persists on soft navigation) --- */}
+                <script src="https://cdn.tailwindcss.com"></script>
+
                 {/* --- 1. LOCAL WEBFLOW STYLES (Served from /public/css/) --- */}
                 {/* These make your Navbar and Pages look correct immediately */}
                 <link href="/css/normalize.css" rel="stylesheet" type="text/css" />
                 <link href="/css/webflow.css" rel="stylesheet" type="text/css" />
                 <link href="/css/lionels-stunning-site-07720d.webflow.css" rel="stylesheet" type="text/css" />
 
-                {/* --- 2. WEBFLOW FONTS (Lato & Manrope) --- */}
+                {/* --- 2. GOOGLE FONTS (Lato, Manrope & Inter) --- */}
                 <link href="https://fonts.googleapis.com" rel="preconnect" />
                 <link href="https://fonts.gstatic.com" rel="preconnect" crossOrigin="anonymous" />
                 <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
                 <script
                     type="text/javascript"
                     dangerouslySetInnerHTML={{
-                        __html: `WebFont.load({ google: { families: ["Lato:100,300,400,700,900","Manrope:regular,500,600,700,800"] } });`
+                        __html: `WebFont.load({ google: { families: ["Lato:100,300,400,700,900","Manrope:regular,500,600,700,800","Inter:100,200,300,400,500,600,700,800,900"] } });`
                     }}
                 />
             </head>
