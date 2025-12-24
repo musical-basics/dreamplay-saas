@@ -56,29 +56,48 @@ function renderPreview(html: string, values: Record<string, string>): string {
 
 /**
  * Wrap rendered HTML in a complete document with all CSS/JS dependencies
+ * Uses absolute URLs to the web app for CSS files
  */
 function wrapInDocument(html: string): string {
+    // Base URL for the web app (where CSS files are served)
+    const webAppBaseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'https://dreamplay-saas-web.vercel.app';
+
     // Check if HTML already has a doctype/html structure
     const hasDoctype = html.toLowerCase().includes('<!doctype');
     const hasHtmlTag = html.toLowerCase().includes('<html');
 
-    if (hasDoctype || hasHtmlTag) {
-        // Already a complete document - inject dependencies into head
-        // Find the </head> tag and inject before it
-        const headCloseIndex = html.toLowerCase().indexOf('</head>');
-        if (headCloseIndex !== -1) {
-            const dependencies = `
+    // Dependencies to inject
+    const dependencies = `
     <!-- Injected Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Webflow CSS (from web app) -->
+    <link href="${webAppBaseUrl}/css/normalize.css" rel="stylesheet" type="text/css" />
+    <link href="${webAppBaseUrl}/css/webflow.css" rel="stylesheet" type="text/css" />
+    <link href="${webAppBaseUrl}/css/lionels-stunning-site-07720d.webflow.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin="anonymous" />
     <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
     <script>WebFont.load({ google: { families: ["Lato:100,300,400,700,900","Manrope:regular,500,600,700,800","Inter:100,200,300,400,500,600,700,800,900"] } });</script>
+    
     <style>
-        body { margin: 0; font-family: 'Inter', 'Lato', sans-serif; }
+        body { margin: 0; font-family: 'Manrope', 'Lato', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
     </style>
 `;
+
+    if (hasDoctype || hasHtmlTag) {
+        // Already a complete document - inject dependencies into head
+        const headCloseIndex = html.toLowerCase().indexOf('</head>');
+        if (headCloseIndex !== -1) {
             return html.slice(0, headCloseIndex) + dependencies + html.slice(headCloseIndex);
+        }
+        // No </head> tag found, try to inject after <head>
+        const headOpenIndex = html.toLowerCase().indexOf('<head>');
+        if (headOpenIndex !== -1) {
+            const insertPos = headOpenIndex + 6;
+            return html.slice(0, insertPos) + dependencies + html.slice(insertPos);
         }
         return html;
     }
@@ -90,33 +109,7 @@ function wrapInDocument(html: string): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Webflow CSS (from public web app) -->
-    <link href="/css/normalize.css" rel="stylesheet" type="text/css" onerror="this.remove()" />
-    <link href="/css/webflow.css" rel="stylesheet" type="text/css" onerror="this.remove()" />
-    <link href="/css/lionels-stunning-site-07720d.webflow.css" rel="stylesheet" type="text/css" onerror="this.remove()" />
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin="anonymous" />
-    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
-    <script>
-        WebFont.load({ 
-            google: { 
-                families: ["Lato:100,300,400,700,900","Manrope:regular,500,600,700,800","Inter:100,200,300,400,500,600,700,800,900"] 
-            } 
-        });
-    </script>
-    
-    <style>
-        body { 
-            margin: 0; 
-            font-family: 'Inter', 'Lato', -apple-system, BlinkMacSystemFont, sans-serif; 
-        }
-    </style>
+    ${dependencies}
 </head>
 <body>
 ${html}
