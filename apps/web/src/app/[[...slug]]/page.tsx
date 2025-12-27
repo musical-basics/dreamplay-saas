@@ -2,6 +2,7 @@ import { db } from "@repo/database";
 import { notFound } from "next/navigation";
 import mustache from "mustache";
 import Navbar from "../../components/Navbar";
+import HtmlWithScripts from "../../components/HtmlWithScripts";
 
 export const dynamic = "force-dynamic";
 
@@ -112,8 +113,9 @@ export default async function Page({ params, searchParams }: PageProps) {
             {/* If isTransparent (True): pt-0. Navbar floats over content.
                If isTransparent (False): pt-32. Pushes content down ~128px to clear Navbar.
             */}
-            <main
-                dangerouslySetInnerHTML={{ __html: renderedHtml }}
+            {/* Use the Helper Component to execute inline JS */}
+            <HtmlWithScripts
+                html={renderedHtml}
                 className={`min-h-screen ${isTransparent ? "pt-0" : "pt-32"}`}
             />
         </>
